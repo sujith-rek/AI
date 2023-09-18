@@ -8,12 +8,15 @@ class Puzzle:
         self.initial_state = initial_state
         self.goal_state = goal_state
 
+    
     def get_zero_index(self):
         return self.initial_state.index(0)
+    
     
     def update_initial_state(self, new_initial_state):
         self.initial_state = new_initial_state
     
+
     def update_goal_state(self, new_goal_state):
         self.goal_state = new_goal_state
     
@@ -23,7 +26,6 @@ class Puzzle:
     # then we join the list back together
     # if not valid, we return None
     def move(self, direction):
-
         z_index = self.get_zero_index()
         new_initial_state = list(self.initial_state)
         if direction == 'U':
@@ -43,7 +45,6 @@ class Puzzle:
         self.update_initial_state(tuple(new_initial_state))
         return self.initial_state
     
-        
 
     def play(self, k):
         while k > 0:
@@ -51,12 +52,15 @@ class Puzzle:
                 k -= 1
         return self.initial_state
     
+
     def is_puzzle_solved(self):
         return self.initial_state == self.goal_state
     
+
     def breadth_first_search(self, goal_path = []):
         completed_states = set()
         return self.bfs(self.initial_state, goal_path, completed_states)
+
 
     def bfs(self, state, goal_path, completed_states):
         st = [(state, [])]
@@ -72,13 +76,13 @@ class Puzzle:
                     if new_puzzle.move(direction) is not None and new_puzzle.initial_state not in completed_states:
                         st.append((new_puzzle.initial_state, path + [direction]))
         return None
-    
         
     
     def depth_first_search(self, goal_path = []):
         completed_states = set()
         return self.dfs(self.initial_state, goal_path, completed_states)
     
+
     def dfs(self, state, goal_path, completed_states):
         st = [(state, [])]
         while st:
@@ -98,6 +102,7 @@ class Puzzle:
         completed_states = set()
         return self.ids(self.initial_state, goal_path, depth, increment,completed_states)
     
+
     def ids(self, state, goal_path, depth, increment, completed_states):
         current_depth = depth
         while current_depth > 0:
@@ -112,6 +117,7 @@ class Puzzle:
         completed_states = set()
         return self.dls(self.initial_state, goal_path, completed_states, limit)
     
+
     def dls(self, state, goal_path,completed_states, limit=10):
         st = [(state, [])]
         while st:
@@ -125,12 +131,14 @@ class Puzzle:
                     if new_puzzle.move(direction) is not None and new_puzzle.initial_state not in completed_states and len(path) < limit:
                         st.append((new_puzzle.initial_state, path + [direction]))
     
+
     def print_path(self, path):
         if path is None:
             print("No solution found")
         else:
             print(path, end = " ")
             print("\n\n")
+
 
 def main():
     puzzle = Puzzle()
@@ -146,22 +154,7 @@ def main():
     print("DFS: ", end = "")
     puzzle.print_path(puzzle.depth_first_search())
 
+
 if __name__ == "__main__":
     main()
-        
-    
-
-
-    
-
-
-
-
-
-    
-
-
-
-
-
         
