@@ -60,17 +60,17 @@ class Puzzle:
     
     def depth_first_search(self):
         visited = set()
-        stack = [(self, [], 0)]
+        stack = [(self, [], 0,"")]
         while stack:
-            (vertex, path, depth) = stack.pop()
+            (vertex, path, depth, state) = stack.pop()
             if vertex.is_solved():
                 return path
-            if vertex not in visited:
-                visited.add(vertex)
+            if vertex.puzzle_string not in visited:
+                visited.add(vertex.puzzle_string)
                 for direction in range(4):
                     new_puzzle = Puzzle(vertex.puzzle_string)
                     if new_puzzle.move(direction) is not None:
-                        stack.append((new_puzzle, path + [direction], depth+1))
+                        stack.append((new_puzzle, path + [direction], depth+1, state + vertex.puzzle_string))
                 
         return None
     
@@ -90,16 +90,7 @@ class Puzzle:
                 
         return None
     
-    def iterative_deepening_search(self):
-        depth = 5
-        while True:
-            result = self.depth_limited_search(depth)
-            if result is not None:
-                return result
-            depth += 1
-            print("Depth: ", depth)
-    
-    def iterative_deepening_search(self,depth,increment):
+    def iterative_deepening_search(self,depth=5,increment=1):
         while True:
             result = self.depth_limited_search(depth)
             if result is not None:
@@ -122,10 +113,11 @@ def print_path(path):
             elif direction == 3:
                 puzzle_path.append("D")
         print(" -> ".join(puzzle_path))
+        print()
 
 
 puzzle = Puzzle()
-print(puzzle.play(10))
+print("Generated puzzle: ", puzzle.play(10))
 print_path(puzzle.breadth_first_search())
 print_path(puzzle.depth_limited_search(10))
 print_path(puzzle.iterative_deepening_search())
