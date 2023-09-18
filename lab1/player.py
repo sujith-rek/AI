@@ -124,7 +124,7 @@ def print_path(message, path, end):
                 puzzle_path.append("U")
             elif direction == 3:
                 puzzle_path.append("D")
-        print(" -> ".join(puzzle_path))
+        print("".join(puzzle_path))
     print(end)
 
 
