@@ -130,8 +130,12 @@ def print_path(message, path, end):
 
 puzzle = Puzzle()
 print("Generated puzzle: ", puzzle.play(10), "\n")
-print_path("Breadth First Search : : ",puzzle.breadth_first_search(),'\n')
-print_path("Depth Limiting Search : ",puzzle.depth_limited_search(10),'\n')
-print_path("Iterative Deepening search : ",puzzle.iterative_deepening_search(),'\n')
-print_path("Depth First Search : ",puzzle.depth_first_search(),'\n')
+print("Breath First Search: ")
+print_path("Path: ", puzzle.breadth_first_search(), "\n")
+print("Iterative Deepening Search: ")
+print_path("Path: ", puzzle.iterative_deepening_search(), "\n")
+print("Depth Limited Search: ")
+print_path("Path: ", puzzle.depth_limited_search(10), "\n")
+print("Depth First Search: ")
+print_path("Path: ", puzzle.depth_first_search(), "\n")
 
