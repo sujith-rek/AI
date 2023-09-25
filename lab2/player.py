@@ -8,6 +8,7 @@
 # find a solution to the problem.
 
 import random
+import heapq
 
 class Puzzle:
     puzzle_string = ""
@@ -66,7 +67,32 @@ class Puzzle:
         return distance
     
 
+    def a_star(self):
+        open_list = []
+        closed_list = set()
+        cost = 0
+        heapq.heappush(open_list, (self.manhattan_distance(), cost, self.puzzle_string, []))
+        
+        
     
+
+    def greedy_solve(self):
+        open_list = []
+        closed_list = set()
+        heapq.heappush(open_list, (self.manhattan_distance(), 0, self.puzzle_string, []))
+        while open_list:
+            (heuristic, depth, vertex, path) = heapq.heappop(open_list)
+            if vertex == self.goal_state:
+                return path
+            if vertex not in closed_list:
+                closed_list.add(vertex)
+                for direction in range(4):
+                    new_puzzle_string = self.move(direction)
+                    if new_puzzle_string is not None:
+                        heapq.heappush(open_list, (self.manhattan_distance() + depth + 1, depth + 1, new_puzzle_string, path + [direction]))
+                        self.update_puzzle_string(vertex)
+        return None
+        
 
 
 def print_path(message, path, end):
@@ -91,4 +117,4 @@ def print_path(message, path, end):
 puzzle = Puzzle()
 puzzle.play(10)
 print("Initial State: ", puzzle.puzzle_string, "\n")    
-print_path("A* Search: ", puzzle.A_star_search(), "\n")
+print_path("A* Search: ", puzzle.a_star(), "\n")
