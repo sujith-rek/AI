@@ -6,6 +6,9 @@
 
 import pandas as pd
 import os
+import numpy as np
+import matplotlib.pyplot as plt
+import statsmodels.api as sm
 
 # if file s&p500.csv is not present, download it from yahoo finance
 if not os.path.isfile('s&p500.csv'):
@@ -17,6 +20,25 @@ if not os.path.isfile('s&p500.csv'):
 data = pd.read_csv('s&p500.csv')
 
 # Date,Open,High,Low,Close,Adj Close,Volume
+
+model = sm.tsa.MarkovRegression(data['Adj Close'], k_regimes=2, trend='n', switching_variance=True)
+model_fit = model.fit()
+
+# print the transition matrix
+print(model_fit.expected_durations)
+
+# plot the regimes
+plt.figure(figsize=(10, 8))
+plt.plot(model_fit.smoothed_marginal_probabilities[0], label='Regime 0')
+plt.plot(model_fit.smoothed_marginal_probabilities[1], label='Regime 1')
+plt.legend()
+plt.title('Regime switching')
+plt.show()
+
+# predict the future regimes
+print(model_fit.predict(5))
+
+
 
 
 

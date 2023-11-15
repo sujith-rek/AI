@@ -31,4 +31,29 @@
 # | Rain | Mild | High | Strong | No |
 
 
+import pandas as pd
+from pgmpy.models import BayesianNetwork as BayesianModel
+from pgmpy.estimators import MaximumLikelihoodEstimator
+from pgmpy.inference import VariableElimination
+
+# Define the dataset
+data = pd.DataFrame(data={
+    'Outlook': ['Sunny', 'Sunny', 'Overcast', 'Rain', 'Rain', 'Rain', 'Overcast', 'Sunny', 'Sunny', 'Rain', 'Sunny', 'Overcast', 'Overcast', 'Rain'],
+    'Temperature': ['Hot', 'Hot', 'Hot', 'Mild', 'Cool', 'Cool', 'Cool', 'Mild', 'Cool', 'Mild', 'Mild', 'Mild', 'Hot', 'Mild'],
+    'Humidity': ['High', 'High', 'High', 'High', 'Normal', 'Normal', 'Normal', 'High', 'Normal', 'Normal', 'Normal', 'High', 'Normal', 'High'],
+    'Wind': ['Weak', 'Strong', 'Weak', 'Weak', 'Weak', 'Strong', 'Strong', 'Weak', 'Weak', 'Weak', 'Strong', 'Strong', 'Weak', 'Strong'],
+    'PlayTennis': ['Yes', 'No', 'Yes', 'Yes', 'Yes', 'No', 'Yes', 'No', 'Yes', 'Yes', 'Yes', 'Yes', 'Yes', 'No']
+})
+
+# Define the structure of the BBN
+model = BayesianModel([('Outlook', 'PlayTennis'), ('Temperature', 'PlayTennis'), ('Humidity', 'PlayTennis'), ('Wind', 'PlayTennis')])
+
+# Learn the CPTs
+model.fit(data, estimator=MaximumLikelihoodEstimator)
+
+# Implement the inference algorithm
+inference = VariableElimination(model)
+print(inference.query(variables=['PlayTennis'], evidence={'Outlook': 'Sunny', 'Temperature': 'Hot', 'Humidity': 'High', 'Wind': 'Weak'}))
+
+
 
