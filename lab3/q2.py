@@ -17,43 +17,193 @@
 # |---------|-------------|----------|------|------------|
 # | Sunny | Hot | High | Weak | Yes |
 # | Sunny | Hot | High | Strong | No |
-# | Overcast | Hot | High | Weak | Yes |
+# | Sunny | Cool | Normal | Weak | Yes |
+# | Sunny | Mild | High | Weak | No |
+# | Sunny | Mild | Normal | Strong | Yes |
+# | Rain | Mild | High | Strong | No |
 # | Rain | Mild | High | Weak | Yes |
 # | Rain | Cool | Normal | Weak | Yes |
 # | Rain | Cool | Normal | Strong | No |
-# | Overcast | Cool | Normal | Strong | Yes |
-# | Sunny | Mild | High | Weak | No |
-# | Sunny | Cool | Normal | Weak | Yes |
 # | Rain | Mild | Normal | Weak | Yes |
-# | Sunny | Mild | Normal | Strong | Yes |
+# | Overcast | Cool | Normal | Strong | Yes |
+# | Overcast | Hot | High | Weak | Yes |
 # | Overcast | Mild | High | Strong | Yes |
 # | Overcast | Hot | Normal | Weak | Yes |
-# | Rain | Mild | High | Strong | No |
 
+class Node:
+    
+    def __init__(self, name, parents, cpt):
+        self.name = name
+        self.parents = parents
+        self.cpt = cpt
 
-import pandas as pd
-from pgmpy.models import BayesianNetwork as BayesianModel
-from pgmpy.estimators import MaximumLikelihoodEstimator
-from pgmpy.inference import VariableElimination
+    def __str__(self):
+        return self.name
 
-# Define the dataset
-data = pd.DataFrame(data={
-    'Outlook': ['Sunny', 'Sunny', 'Overcast', 'Rain', 'Rain', 'Rain', 'Overcast', 'Sunny', 'Sunny', 'Rain', 'Sunny', 'Overcast', 'Overcast', 'Rain'],
-    'Temperature': ['Hot', 'Hot', 'Hot', 'Mild', 'Cool', 'Cool', 'Cool', 'Mild', 'Cool', 'Mild', 'Mild', 'Mild', 'Hot', 'Mild'],
-    'Humidity': ['High', 'High', 'High', 'High', 'Normal', 'Normal', 'Normal', 'High', 'Normal', 'Normal', 'Normal', 'High', 'Normal', 'High'],
-    'Wind': ['Weak', 'Strong', 'Weak', 'Weak', 'Weak', 'Strong', 'Strong', 'Weak', 'Weak', 'Weak', 'Strong', 'Strong', 'Weak', 'Strong'],
-    'PlayTennis': ['Yes', 'No', 'Yes', 'Yes', 'Yes', 'No', 'Yes', 'No', 'Yes', 'Yes', 'Yes', 'Yes', 'Yes', 'No']
-})
+class CustomBayesModel:
 
-# Define the structure of the BBN
-model = BayesianModel([('Outlook', 'PlayTennis'), ('Temperature', 'PlayTennis'), ('Humidity', 'PlayTennis'), ('Wind', 'PlayTennis')])
+    def __init__(self, nodes):
+        self.nodes = nodes
+    
+    def get_node(self, name):
+        for node in self.nodes:
+            if node.name == name:
+                return node
+        return None
+    
+    def get_parents(self, node):
+        parents = []
+        for parent in node.parents:
+            parents.append(self.get_node(parent))
+        return parents
+    
+    def get_children(self, node):
+        children = []
+        for child in self.nodes:
+            if node.name in child.parents:
+                children.append(child)
+        return children
+    
+    def add_edge(self, parent, child):
+        child.parents.append(parent.name)
+    
+    def remove_edge(self, parent, child):
+        child.parents.remove(parent.name)
+    
+    def get_ancestors(self, node):
+        ancestors = []
+        parents = self.get_parents(node)
+        for parent in parents:
+            ancestors.append(parent)
+            ancestors.extend(self.get_ancestors(parent))
+        return ancestors
+    
+    def get_descendants(self, node):
+        descendants = []
+        children = self.get_children(node)
+        for child in children:
+            descendants.append(child)
+            descendants.extend(self.get_descendants(child))
+        return descendants
+    
+    def get_independent_nodes(self, node):
+        independent_nodes = []
+        for node in self.nodes:
+            if node not in self.get_ancestors(node) and node not in self.get_descendants(node):
+                independent_nodes.append(node)
+        return independent_nodes
+    
+    def get_conditional_probability(self, node, evidence):
+        parents = self.get_parents(node)
+        if len(parents) == 0:
+            return node.cpt[0][1]
+        else:
+            for row in node.cpt:
+                if row[0] == evidence:
+                    return row[1]
+        return None
+    
+    def get_probability(self, node, evidence):
+        parents = self.get_parents(node)
+        if len(parents) == 0:
+            return node.cpt[0][1]
+        else:
+            for row in node.cpt:
+                if row[0] == evidence:
+                    return row[1]
+        return None
+    
+    def get_probability_of_evidence(self, evidence):
+        probability = 1
+        for node in self.nodes:
+            
+            if node.name in evidence:
+                probability *= self.get_conditional_probability(node, evidence[node.name])
+            
+        return probability
+    
+    def get_probability_of_evidence_given(self, evidence, node):
+        probability = 1
+        for node in self.nodes:
+            if node.name in evidence:
+                probability *= self.get_probability(node, evidence[node.name])
+        return probability
+    
+    # Inference method which will conclude if PlayTennis is Yes or No based on the given evidence
+    def inference(self, evidence):
+        probability = self.get_probability_of_evidence(evidence)
+        probability_yes = self.get_probability_of_evidence_given(evidence, self.get_node('PlayTennis'))
 
-# Learn the CPTs
-model.fit(data, estimator=MaximumLikelihoodEstimator)
+        print('Probability of evidence: ', probability)
+        print('Probability of evidence given PlayTennis: ', probability_yes)
 
-# Implement the inference algorithm
-inference = VariableElimination(model)
-print(inference.query(variables=['PlayTennis'], evidence={'Outlook': 'Sunny', 'Temperature': 'Hot', 'Humidity': 'High', 'Wind': 'Weak'}))
+        return probability_yes / probability
+    
+
+newBayesModel = CustomBayesModel([
+    Node('Outlook', [], [
+        [['Sunny'], 5/14],
+        [['Overcast'], 4/14],
+        [['Rain'], 5/14]
+    ]),
+    Node('Temperature', [], [
+        [['Hot'], 4/14],
+        [['Mild'], 6/14],
+        [['Cool'], 4/14]
+    ]),
+    Node('Humidity', [], [
+        [['High'], 7/14],
+        [['Normal'], 7/14]
+    ]),
+    Node('Wind', [], [
+        [['Weak'], 8/14],
+        [['Strong'], 6/14]
+    ]),
+    Node('PlayTennis', ['Outlook', 'Temperature', 'Humidity', 'Wind'], [
+        [['Sunny', 'Hot', 'High', 'Weak'], 2/9],
+        [['Sunny', 'Hot', 'High', 'Strong'], 0/9],
+        [['Overcast', 'Hot', 'High', 'Weak'], 4/9],
+        [['Rain', 'Mild', 'High', 'Weak'], 3/9],
+        [['Rain', 'Cool', 'Normal', 'Weak'], 2/9],
+        [['Rain', 'Cool', 'Normal', 'Strong'], 0/9],
+        [['Overcast', 'Cool', 'Normal', 'Strong'], 4/9],
+        [['Sunny', 'Mild', 'High', 'Weak'], 0/9],
+        [['Sunny', 'Cool', 'Normal', 'Weak'], 3/9],
+        [['Rain', 'Mild', 'Normal', 'Weak'], 2/9],
+        [['Sunny', 'Mild', 'Normal', 'Strong'], 6/9],
+        [['Overcast', 'Mild', 'High', 'Strong'], 4/9],
+        [['Overcast', 'Hot', 'Normal', 'Weak'], 4/9],
+        [['Rain', 'Mild', 'High', 'Strong'], 0/9]
+    ])
+])
+
+print(newBayesModel.get_probability_of_evidence({
+    'Outlook': 'Sunny',
+    'Temperature': 'Cool',
+    'Humidity': 'High',
+    'Wind': 'Strong'
+}))
+
+print(newBayesModel.get_probability_of_evidence({
+    'Outlook': 'Rain',
+    'Temperature': 'Mild',
+    'Humidity': 'High',
+    'Wind': 'Weak'
+}))
+
+print(newBayesModel.get_probability_of_evidence({
+    'Outlook': 'Overcast',
+    'Temperature': 'Hot',
+    'Humidity': 'Normal',
+    'Wind': 'Weak'
+}))
+
+print(newBayesModel.inference({
+    'Outlook': 'Sunny',
+    'Temperature': 'Cool',
+    'Humidity': 'Normal',
+    'Wind': 'Strong'
+}))
 
 
 
